@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://d19vzq90twjlae.cloudfront.net/leaflet-0.7/leaflet.css" />
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/chicago_city.js') }}"></script>
+
+<style>
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    html, body, #map {
+        height: 100%;
+        width: 100%;
+    }
+body {
+  font-family: "Lato", sans-serif;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+</style>
+</head>
+<body>
+
+<div id="mySidenav" class="sidenav">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <a onclick='All_the_reported_crimes()'>All the reported crimes</a>
+  <a onclick="document.getElementById('search_caseid').style.display='block'">Search by case ID</a>
+  <a onclick="document.getElementById('search_date').style.display='block'">Search by date</a>
+  <a onclick="document.getElementById('search_coordinate').style.display='block'">Search by coordinates</a>
+  <br>.
+  <a onclick="document.getElementById('report_Crime').style.display='block'">Report a crime</a>
+  <br>.
+  <a onclick='removelayers()'>Clean the map</a>
+</div>
+
+<div id="map" style='position:absolute'></div>
+<span style="font-size:30px;cursor:pointer;position:absolute" onclick="openNav()">&#9776; MENU</span>
+
+
+<div id="search_caseid" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom">
+    <div class="w3-container w3-black">
+      <span onclick="document.getElementById('search_caseid').style.display='none'" class="w3-button w3-display-topright w3-large">x</span>
+      <h1>Search by case ID</h1>
+    </div>
+    <div class="w3-container">
+      <p>Type the case id of a reported crime event:</p>
+      <form>
+        <p><input id="caseid_by" class="w3-input w3-padding-16 w3-border" type="text" placeholder="id" required name="caseid_by"></p>
+        <p><input class="w3-button" type="button" value="Find case" onclick="search_caseid_f();" /></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="search_date" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom">
+    <div class="w3-container w3-black">
+      <span onclick="document.getElementById('search_date').style.display='none'" class="w3-button w3-display-topright w3-large">x</span>
+      <h1>Search by date/h1>
+    </div>
+    <div class="w3-container">
+      <p>Type date of a reported crime event:</p>
+      <form>
+        <p><input id="date_by" class="w3-input w3-padding-16 w3-border" type="text" placeholder="date" required name="date_by"></p>
+        <p><input class="w3-button" type="button" value="Find case" onclick="search_date_f();" /></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="search_coordinate" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom">
+    <div class="w3-container w3-black">
+      <span onclick="document.getElementById('search_coordinate').style.display='none'" class="w3-button w3-display-topright w3-large">x</span>
+      <h1>Search by coordinate</h1>
+    </div>
+    <div class="w3-container">
+      <p>Type latitue, longitude, and range of a reported crime event:</p>
+      <form>
+        <p><input id="latitude_by" class="w3-input w3-padding-16 w3-border" type="text" placeholder="latitude" required name="latitude_by"></p>
+        <p><input id="longitude_by" class="w3-input w3-padding-16 w3-border" type="text" placeholder="longitude" required name="longitude_by"></p>
+        <p><input id="range_by" class="w3-input w3-padding-16 w3-border" type="text" placeholder="range" required name="range_by"></p>
+        <p><input class="w3-button" type="button" value="Find case" onclick="search_coordinate_f();" /></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="report_Crime" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom">
+    <div class="w3-container w3-black">
+      <span onclick="document.getElementById('report_Crime').style.display='none'" class="w3-button w3-display-topright w3-large">x</span>
+      <h1>Report an incident</h1>
+    </div>
+    <div class="w3-container">
+      <p>Type all the information</p>
+      <form action="{{ url_for('home') }}" method="POST">
+        <p><input id="victim_id" class="w3-input w3-padding-16 w3-border" type="text" placeholder="victim id" name="victim_id"></p>
+        <p><input id="criminal_id" class="w3-input w3-padding-16 w3-border" type="text" placeholder="criminal id" name="criminal_id"></p>
+        <p><input id="crime_primary_type_id" class="w3-input w3-padding-16 w3-border" type="text" placeholder="crime primary type id" required name="crime_primary_type_id"></p>
+        <p><input id="agent_id" class="w3-input w3-padding-16 w3-border" type="text" placeholder="agent id" required name="agent_id"></p>
+        <p><input id="arrest" class="w3-input w3-padding-16 w3-border" type="text" placeholder="arrest?" required name="arrest"></p>
+        <p><input id="location_id" class="w3-input w3-padding-16 w3-border" type="text" placeholder="location id" required name="location_id"></p>
+        <p><input class="w3-button" type="submit" value="Save case" /></p>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function search_coordinate_f() {
+  var lat = $("#latitude_by").val();
+  var lon = $("#longitude_by").val();
+  var range = $("#range_by").val();
+
+  L.circleMarker([parseFloat(lat), parseFloat(lon)], {
+      color: 'green',
+      fillColor: 'green',
+      fillOpacity: 0.2,
+      radius: parseInt(range),
+  }).addTo(map);
+
+  var geofencing = L.circle([parseFloat(lat), parseFloat(lon)], {
+      color: 'green',
+      fillColor: 'green',
+      fillOpacity: 0,
+      radius: parseInt(range),
+  }).addTo(map);
+
+  {%for l in the_cases%}
+    try {
+      var loc = JSON.parse('{{ l | tojson | safe}}');
+      var the_result = geofencing.getBounds().contains([loc['geometry']['coordinates'][1],loc['geometry']['coordinates'][0]]);
+      if (the_result == true){
+        L.geoJson(loc,{
+        		style: function (feature) {
+        			return feature.properties && feature.properties.style;
+        		},
+
+        		onEachFeature: onEachFeature,
+
+        		pointToLayer: function (feature, latlng) {
+        			return L.circleMarker(latlng, {
+        				radius: 5,
+        				fillColor: "#ff7800",
+        				color: "red",
+        				weight: 1,
+        				opacity: 1,
+        				fillOpacity: 1
+        			});
+        		}
+        	}).addTo(map);
+        }
+    }catch(err) {}
+    {%endfor%}
+}
+
+
+function search_date_f() {
+  var singleValues = $("#date_by").val();
+  {%for l in the_cases%}
+      try {
+        var loc = JSON.parse('{{ l | tojson | safe}}');
+        var n = loc['data']['created_at'].includes(singleValues);
+        if (n == true){
+          L.geoJson(loc,{
+          		style: function (feature) {
+          			return feature.properties && feature.properties.style;
+          		},
+
+          		onEachFeature: onEachFeature,
+
+          		pointToLayer: function (feature, latlng) {
+          			return L.circleMarker(latlng, {
+          				radius: 5,
+          				fillColor: "#ff7800",
+          				color: "red",
+          				weight: 1,
+          				opacity: 1,
+          				fillOpacity: 1
+          			});
+          		}
+          	}).addTo(map);
+            }
+        }catch(err) {}
+    {%endfor%}
+}
+
+function search_caseid_f() {
+  var singleValues = $("#caseid_by").val();
+  var url = 'http:'+'//localhost:5000/api/crime_by_id/'+singleValues;
+  fetch(url)
+  .then((resp) => resp.json())
+  .then(function(data) {
+      console.log(data)
+      L.geoJson(data,{
+      		style: function (feature) {
+      			return feature.properties && feature.properties.style;
+      		},
+
+      		onEachFeature: onEachFeature,
+
+      		pointToLayer: function (feature, latlng) {
+      			return L.circleMarker(latlng, {
+      				radius: 5,
+      				fillColor: "red",
+      				color: "red",
+      				weight: 1,
+      				opacity: 1,
+      				fillOpacity: 1
+      			});
+      		}
+      	}).addTo(map);
+    })
+}
+
+function openNav() {
+  document.getElementById("mySidenav").style.width = "350px";
+}
+
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+}
+
+function onEachFeature(feature, layer) {
+		var popupContent = "<p>Case id: " +feature.data.id + "</p>";
+    popupContent += "<p>Victm name: " +feature.data.victm + "</p>";
+    popupContent += "<p>Criminal name: " +feature.data.criminal + "</p>";
+    popupContent += "<p>Crime primary type: " +feature.data.crime_primary_type + "</p>";
+    popupContent += "<p>Created at: " +feature.data.created_at + "</p>";
+    popupContent += "<p>Crime location:  " +feature.data.location + "</p>";
+
+		if (feature.properties && feature.properties.popupContent) {
+			popupContent
+		}
+
+		layer.bindPopup(popupContent);
+	}
+
+function All_the_reported_crimes() {
+  {%for l in the_cases%}
+    try {
+      var loc = JSON.parse('{{ l | tojson | safe}}');
+      L.geoJson(loc,{
+      		style: function (feature) {
+      			return feature.properties && feature.properties.style;
+      		},
+
+      		onEachFeature: onEachFeature,
+
+      		pointToLayer: function (feature, latlng) {
+      			return L.circleMarker(latlng, {
+      				radius: 5,
+      				fillColor: "#ff7800",
+      				color: "red",
+      				weight: 1,
+      				opacity: 1,
+      				fillOpacity: 1
+      			});
+      		}
+      	}).addTo(map);
+    }catch(err) {}
+    {%endfor%}
+    }
+
+</script>
+
+<script>
+    var map = L.map('map',{zoomControl: false}).setView([41.871794, -87.676807], 10);
+    mapLink ='<a href="http://openstreetmap.org">OpenStreetMap</a>';
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; ' + mapLink + ' Contributors',
+        maxZoom: 18,
+        id: 'mapbox.streets'
+      }).addTo(map);
+
+    L.control.zoom({
+       position:'topright'
+  }).addTo(map);
+  L.geoJson(chicago_city, {style: {"fillOpacity": .05}}).addTo(map);
+</script>
+
+
+</body>
+</html>

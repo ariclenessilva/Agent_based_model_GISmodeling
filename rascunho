@@ -1,0 +1,50 @@
+df = pd.read_csv('Crimes_-_2019 (2).csv')
+
+def save_into_databse(data):
+#    random.seed(0)
+    try:
+        a_n = random.randint(0, (225021*10))
+        full_name=''.join((random.choice(string.ascii_letters) for i in range(5)))
+        if range(0, 1)==0:
+            gender='male'
+        else:
+            gender='female'
+        policy_district=''.join((random.choice(string.ascii_letters) for i in range(4)))
+        agent = agents(id=a_n,full_name=full_name, gender=gender, policy_district=policy_district)
+
+        l_n = random.randint(0, (225021*10))
+        location = locations(id=l_n,street=data['Block'],apt='',zipcode='',description=data['Location Description'],x_coordinate=data['X Coordinate'],y_coordinate=data['Y Coordinate'], latitude=data['Latitude'], longitude=data['Longitude'])
+
+        full_name=''.join((random.choice(string.ascii_letters) for i in range(5)))
+        v_n = random.randint(0, (225021*10))
+        bp_n = random.randint(0, (225021*10))
+        bp = bi_or_passport(id=str(bp_n),full_name=full_name,gender=gender,father_name=full_name,mother_name=full_name,address='')
+        db.session.add(bp)
+        victim = victims(id=v_n,full_name=full_name, phone_number=12345, bi_or_passport_id=str(bp_n))
+
+        full_name=''.join((random.choice(string.ascii_letters) for i in range(5)))
+        FBI_code=''.join((random.choice(string.ascii_letters) for i in range(5)))
+        c_n = random.randint(0, (225021*10))
+        bp_n = random.randint(0, (225021*10))
+        bp = bi_or_passport(id=str(bp_n),full_name=full_name,gender=gender,father_name=full_name,mother_name=full_name,address='')
+        db.session.add(bp)
+        criminal = criminals(id=c_n, full_name=full_name, number_cases=random.randint(0,10), FBI_code=FBI_code, bi_or_passport_id=str(bp_n))
+
+
+
+        cpt_n = random.randint(0, (225021*10))
+        cpt = crime_primary_types(id=cpt_n, type=data['Primary Type'], description=data['Description'])
+        db.session.add(agent)
+        db.session.add(location)
+        db.session.add(victim)
+        db.session.add(criminal)
+        db.session.add(cpt)
+        case = cases(id=data['Case Number'],victim_id=v_n,criminal_id=c_n,crime_primary_type_id=cpt_n,created_at=data['Date'],updated_on=data['Updated On'],agent_id=a_n,arrest=data['Arrest'],FBI_code=data['FBI Code'],location_id=l_n)
+        db.session.add(case)
+        db.session.commit()
+
+        print('processing')
+    except:
+        pass
+
+df.apply(save_into_databse, axis=1)
