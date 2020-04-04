@@ -1,11 +1,9 @@
-# db_final_trabalho
+# Using agent-based model to simulate disease outbreak
 
-This repository is for the spatial database final project that belongs to Ariclenes Silva
+This repository is for the modeling in GIS final project that belongs to Ariclenes Placido Rabole da Silva
 
 to run the project:
 
-pip freeze > requirements.txt
+Go to Kernel
 
-set flask_app=app.py
-
-flask run
+and then go to Restart and Run all
